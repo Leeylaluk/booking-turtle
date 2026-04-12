@@ -5,7 +5,7 @@ export default function Header({ user, onLogout }) {
     <div className="container">
       <header className="header">
         <Link to="/" className="logo">
-          💅 Записываемся на ноготочки
+         Записываемся на ноготочки
         </Link>
         <nav className="nav">
           {user ? (
