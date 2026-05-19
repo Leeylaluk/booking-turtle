@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import React, { useState, useEffect } from 'react'
+import './Bookings.css'
 
-export default function Bookings({ user }) {
+function Bookings({ user }) {
   const [requests, setRequests] = useState([])
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
 
   useEffect(() => {
     fetchRequests()
@@ -12,12 +12,11 @@ export default function Bookings({ user }) {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/requests/user/${user.id}`)
-      if (!response.ok) throw new Error("Ошибка загрузки")
+      const response = await fetch(`/api/requests/user/${user.id}`)
       const data = await response.json()
       setRequests(data)
     } catch (err) {
-      setError(err.message)
+      setError('Ошибка загрузки записей')
     } finally {
       setLoading(false)
     }
@@ -27,63 +26,54 @@ export default function Bookings({ user }) {
     switch(statusCode) {
       case 'new': return 'status-new'
       case 'confirmed': return 'status-confirmed'
-      case 'canceled': return 'status-rejected'
+      case 'canceled': return 'status-canceled'
       default: return ''
     }
   }
 
-  const getStatusText = (statusName, statusCode) => {
-    if (statusName) return statusName
-    switch(statusCode) {
-      case 'new': return 'Новое'
-      case 'confirmed': return 'Подтверждено'
-      case 'canceled': return 'Отменено'
-      default: return statusCode
-    }
+  const getStatusText = (statusName) => {
+    return statusName
   }
 
-  if (loading) {
-    return <div className="container" style={{ textAlign: 'center', padding: '50px' }}>Загрузка...</div>
+  const formatDateTime = (datetime) => {
+    if (!datetime) return '—'
+    const date = new Date(datetime)
+    return `${date.toLocaleDateString('ru-RU')} ${date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`
   }
+
 
   return (
-    <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
+    <div className="applications-container">
+      <div className="applications-header">
         <h2>Мои записи</h2>
-        <Link to="/booking/new" className="btn btn-primary">Новая запись</Link>
       </div>
       
-      {error && <div className="error" style={{ marginTop: '20px' }}>{error}</div>}
+      {error && <div className="error-message">{error}</div>}
       
       {requests.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', marginTop: '20px' }}>
+        <div className="no-applications">
           <p>У вас пока нет записей</p>
-          <Link to="/booking/new" className="btn btn-primary" style={{ marginTop: '10px' }}>Создать запись</Link>
+          <p>Нажмите "Создать заявку" чтобы записаться</p>
         </div>
       ) : (
-        <div className="card" style={{ marginTop: '20px' }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Дата и время</th>
-                <th>Мастер</th>
-                <th>Статус</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((request) => (
-                <tr key={request.id}>
-                  <td>{new Date(request.booking_datetime).toLocaleString()}</td>
-                  <td>{request.master_name}</td>
-                  <td className={getStatusClass(request.status_code)}>
-                    {getStatusText(request.status_name, request.status_code)}
-                   </td>
-                 </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="applications-list">
+          {requests.map(req => (
+            <div key={req.id} className="application-card-item">
+              <div className="application-header">
+                <h3>✂️ {req.master_name}</h3>
+                <span className={`status-badge ${getStatusClass(req.status_code)}`}>
+                  {getStatusText(req.status_name)}
+                </span>
+              </div>
+              <div className="application-details">
+                <p><strong>Дата и время:</strong> {formatDateTime(req.booking_datetime)}</p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   )
 }
+
+export default Bookings

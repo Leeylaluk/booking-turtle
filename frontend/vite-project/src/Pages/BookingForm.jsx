@@ -1,17 +1,21 @@
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import React, { useState, useEffect } from 'react'
+import './BookingForm.css'
 
-export default function BookingForm({ user }) {
+function BookingForm({ user, onSuccess }) {
   const [masters, setMasters] = useState([])
   const [formData, setFormData] = useState({
-    id_master: "",
-    booking_date: "",
-    booking_time: "10:00"
+    id_master: '',
+    booking_date: '',
+    booking_time: ''
   })
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+
+  const timeSlots = []
+  for (let hour = 8; hour <= 18; hour++) {
+    timeSlots.push(`${hour.toString().padStart(2, '0')}:00`)
+  }
 
   useEffect(() => {
     fetchMasters()
@@ -19,122 +23,102 @@ export default function BookingForm({ user }) {
 
   const fetchMasters = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/masters')
+      const response = await fetch('/api/masters')
       const data = await response.json()
       setMasters(data)
     } catch (err) {
-      console.error("Ошибка загрузки мастеров:", err)
+      setError('Ошибка загрузки мастеров')
     }
   }
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+    setError('')
+    setSuccess('')
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
+    if (!formData.id_master || !formData.booking_date || !formData.booking_time) {
+      setError('Пожалуйста, заполните все поля')
+      return
+    }
+    
+    const booking_datetime = `${formData.booking_date} ${formData.booking_time}:00`
     setLoading(true)
 
-    const bookingDateTime = `${formData.booking_date} ${formData.booking_time}:00`
-
     try {
-      const response = await fetch('http://localhost:5000/api/requests', {
+      const response = await fetch('/api/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id_user: user.id,
-          id_master: formData.id_master,
-          booking_datetime: bookingDateTime
+          id_master: parseInt(formData.id_master),
+          booking_datetime: booking_datetime
         })
       })
-
       const data = await response.json()
-
+      
       if (response.ok) {
-        setSuccess("Заявка успешно создана!")
-        setTimeout(() => {
-          navigate("/")
-        }, 2000)
+        setSuccess('Заявка успешно создана!')
+        setFormData({ id_master: '', booking_date: '', booking_time: '' })
+        if (onSuccess) onSuccess()
+        setTimeout(() => setSuccess(''), 3000)
       } else {
-        setError(data.error || "Ошибка при создании заявки")
+        setError(data.error || 'Ошибка создания заявки')
       }
     } catch (err) {
-      setError("Ошибка соединения с сервером")
+      setError('Ошибка соединения с сервером')
     } finally {
       setLoading(false)
     }
   }
 
-  // Генерация часов от 8 до 20
-  const timeOptions = []
-  for (let i = 8; i <= 20; i++) {
-    const hour = i.toString().padStart(2, '0')
-    timeOptions.push(`${hour}:00`)
-    timeOptions.push(`${hour}:30`)
-  }
+  const minDate = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: '500px', margin: '50px auto' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Новая запись</h2>
-        
-        {error && <div className="error" style={{ textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
-        {success && <div className="success" style={{ textAlign: 'center', marginBottom: '15px' }}>{success}</div>}
-        
+    <div className="application-container">
+      <div className="application-card">
+        <h2>Новая запись</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Выберите мастера *</label>
-            <select
-              name="id_master"
-              value={formData.id_master}
-              onChange={handleChange}
-              required
-            >
+            <label>Выберите мастера</label>
+            <select name="id_master" value={formData.id_master} onChange={handleChange} required>
               <option value="">Выберите мастера</option>
-              {masters.map((master) => (
-                <option key={master.id} value={master.id}>
-                  {master.name}
-                </option>
+              {masters.map(master => (
+                <option key={master.id} value={master.id}>{master.name}</option>
               ))}
             </select>
           </div>
-          
           <div className="form-group">
-            <label>Дата *</label>
-            <input
-              type="date"
-              name="booking_date"
-              value={formData.booking_date}
-              onChange={handleChange}
-              min={new Date().toISOString().split('T')[0]}
-              required
+            <label>Дата</label>
+            <input 
+              type="date" 
+              name="booking_date" 
+              value={formData.booking_date} 
+              onChange={handleChange} 
+              min={minDate}
+              required 
             />
           </div>
-          
           <div className="form-group">
-            <label>Время *</label>
-            <select
-              name="booking_time"
-              value={formData.booking_time}
-              onChange={handleChange}
-              required
-            >
-              {timeOptions.map((time) => (
+            <label>Время (8:00 - 18:00)</label>
+            <select name="booking_time" value={formData.booking_time} onChange={handleChange} required>
+              <option value="">Выберите время</option>
+              {timeSlots.map(time => (
                 <option key={time} value={time}>{time}</option>
               ))}
             </select>
           </div>
-          
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? "Создание..." : "Записаться"}
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Отправка...' : 'Записаться'}
           </button>
         </form>
       </div>
     </div>
   )
 }
+
+export default BookingForm

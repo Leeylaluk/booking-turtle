@@ -1,0 +1,103 @@
+/* src/App.css */
+.app-container {
+    min-height: 100vh;
+  }
+  
+  .navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid #f5c6d4;
+  }
+  
+  .nav-brand h1 {
+    background: linear-gradient(135deg, #e88aa7 0%, #f0a6c0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .nav-menu button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    color: #7a5a67;
+  }
+  
+  .nav-menu button:hover {
+    background: #fce4ed;
+    color: #d46b8e;
+  }
+  
+  .nav-menu button.active {
+    background: linear-gradient(135deg, #f0a6c0 0%, #e88aa7 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(232, 138, 167, 0.3);
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 2px solid #f5c6d4;
+  }
+  
+  .user-info span {
+    color: #8a6572;
+    font-weight: 500;
+  }
+  
+  .logout-btn {
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff9eb0 100%) !important;
+    color: white !important;
+  }
+  
+  .logout-btn:hover {
+    background: linear-gradient(135deg, #f59eb0 0%, #e88aa7 100%) !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(232, 138, 167, 0.4);
+  }
+  
+  .page-content {
+    padding: 30px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  @media (max-width: 768px) {
+    .navbar {
+      flex-direction: column;
+      text-align: center;
+    }
+    .user-info {
+      margin-left: 0;
+      padding-left: 0;
+      border-left: none;
+    }
+  }

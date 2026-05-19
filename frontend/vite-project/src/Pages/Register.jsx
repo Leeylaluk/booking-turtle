@@ -1,150 +1,104 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import React, { useState } from 'react'
+import './Register.css'
 
-export default function Register() {
+function Register({ switchToLogin }) {
   const [formData, setFormData] = useState({
-    full_name: "",
-    phone: "",
-    login: "",
-    password: "",
-    confirmPassword: ""
+    login: '',
+    password: '',
+    full_name: '',
+    phone: ''
   })
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+    setError('')
+  }
+
+  const validateForm = () => {
+    const loginRegex = /^[a-zA-Z0-9]{4,}$/
+    if (!loginRegex.test(formData.login)) {
+      setError('Логин должен содержать минимум 4 символов (латиница и цифры)')
+      return false
+    }
+    if (formData.password.length < 4) {
+      setError('Пароль должен содержать минимум 4 символов')
+      return false
+    }
+    const nameRegex = /^[а-яА-ЯёЁ\s]+$/
+    if (!nameRegex.test(formData.full_name)) {
+      setError('ФИО должно содержать только русские буквы и пробелы')
+      return false
+    }
+    const phoneRegex = /^\d{11}$/
+    if (!phoneRegex.test(formData.phone)) {
+      setError('Телефон должен содержать 11 цифр (например: 79111234567)')
+      return false
+    }
+    return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Пароли не совпадают")
-      return
-    }
-
-    if (formData.password.length < 4) {
-      setError("Пароль должен быть минимум 4 символа")
-      return
-    }
-
+    if (!validateForm()) return
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: formData.full_name,
-          phone: formData.phone,
-          login: formData.login,
-          password: formData.password
-        })
+        body: JSON.stringify(formData)
       })
-
       const data = await response.json()
-
+      
       if (response.ok) {
-        setSuccess("Регистрация успешна! Теперь можете войти.")
-        setTimeout(() => {
-          navigate("/login")
-        }, 2000)
+        setSuccess('Регистрация успешна! Перенаправление на вход...')
+        setTimeout(() => switchToLogin(), 2000)
       } else {
-        setError(data.error || "Ошибка при регистрации")
+        setError(data.error || 'Ошибка регистрации')
       }
     } catch (err) {
-      setError("Ошибка соединения с сервером")
+      setError('Ошибка соединения с сервером')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: '400px', margin: '50px auto' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Регистрация</h2>
-        
-        {error && <div className="error" style={{ textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
-        {success && <div className="success" style={{ textAlign: 'center', marginBottom: '15px' }}>{success}</div>}
-        
+    <div className="register-container">
+      <div className="register-card">
+        <h2>Регистрация</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>ФИО *</label>
-            <input
-              type="text"
-              name="full_name"
-              value={formData.full_name}
-              onChange={handleChange}
-              placeholder="Иванов Иван Иванович"
-              required
-            />
+            <label>Логин (мин. 4 символа, латиница + цифры)</label>
+            <input type="text" name="login" value={formData.login} onChange={handleChange} required />
           </div>
-          
           <div className="form-group">
-            <label>Телефон *</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+7 (999) 123-45-67"
-              required
-            />
+            <label>Пароль (мин. 4 символа)</label>
+            <input type="password" name="password" value={formData.password} onChange={handleChange} required />
           </div>
-          
           <div className="form-group">
-            <label>Логин *</label>
-            <input
-              type="text"
-              name="login"
-              value={formData.login}
-              onChange={handleChange}
-              placeholder="Введите логин"
-              required
-            />
+            <label>ФИО (русские буквы)</label>
+            <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required />
           </div>
-          
           <div className="form-group">
-            <label>Пароль *</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Минимум 4 символа"
-              required
-            />
+            <label>Телефон (11 цифр, например: 79111234567)</label>
+            <input type="tel" name="phone" placeholder="79111234567" value={formData.phone} onChange={handleChange} required />
           </div>
-          
-          <div className="form-group">
-            <label>Подтвердите пароль *</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Повторите пароль"
-              required
-            />
-          </div>
-          
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? "Регистрация..." : "Зарегистрироваться"}
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+          <button type="submit" className="register-btn" disabled={loading}>
+            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
           </button>
         </form>
-        
-        <p style={{ textAlign: 'center', marginTop: '20px' }}>
-          Уже есть аккаунт? <Link to="/login">Войти</Link>
+        <p className="switch-link">
+          Уже есть аккаунт? <button onClick={switchToLogin}>Войти</button>
         </p>
       </div>
     </div>
   )
 }
+
+export default Register

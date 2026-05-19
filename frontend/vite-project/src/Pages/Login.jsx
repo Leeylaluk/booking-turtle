@@ -1,83 +1,78 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import React, { useState } from 'react'
+import './Login.css'
 
-export default function Login({ onLogin }) {
-  const [login, setLogin] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+function Login({ onLogin, switchToRegister }) {
+  const [formData, setFormData] = useState({ login: '', password: '' })
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+    setError('')
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login, password })
+        body: JSON.stringify(formData)
       })
-
       const data = await response.json()
-
+      
       if (response.ok) {
         onLogin(data.user)
-        navigate("/")
       } else {
-        setError(data.error || "Неверный логин или пароль")
+        setError(data.error || 'Неверный логин или пароль')
       }
     } catch (err) {
-      setError("Ошибка соединения с сервером")
+      setError('Ошибка соединения с сервером')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: '400px', margin: '50px auto' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Вход в систему</h2>
-        
-        {error && <div className="error" style={{ textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
-        
+    <div className="login-container">
+      <div className="login-card">
+        <h2>Вход в систему</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Логин</label>
             <input
               type="text"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
+              name="login"
+              value={formData.login}
+              onChange={handleChange}
               placeholder="Введите логин"
               required
             />
           </div>
-          
           <div className="form-group">
             <label>Пароль</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Введите пароль"
               required
             />
           </div>
-          
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? "Вход..." : "Войти"}
+          {error && <div className="error-message">{error}</div>}
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Вход...' : 'Войти'}
           </button>
         </form>
-        
-        <p style={{ textAlign: 'center', marginTop: '20px' }}>
-          Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
-        </p>
-        
-        <p style={{ textAlign: 'center', marginTop: '10px', fontSize: '12px', color: '#999' }}>
-          Админ: beauty / pass
+        <p className="switch-link">
+          Нет аккаунта? <button onClick={switchToRegister}>Зарегистрироваться</button>
         </p>
       </div>
     </div>
   )
 }
+
+export default Login
