@@ -60,7 +60,7 @@ function Bookings({ user }) {
           {requests.map(req => (
             <div key={req.id} className="application-card-item">
               <div className="application-header">
-                <h3>✂️ {req.master_name}</h3>
+                <h3>{req.master_name}</h3>
                 <span className={`status-badge ${getStatusClass(req.status_code)}`}>
                   {getStatusText(req.status_name)}
                 </span>
